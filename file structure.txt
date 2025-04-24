@@ -1,7 +1,0 @@
-index.html
-  |- assets/
-    |- script.js
-    |- style.css
-  |- model/ (if using downloaded model files)
-    |- model.json
-    |- weights.bin
