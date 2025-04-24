@@ -3,7 +3,7 @@ let model;
 const classes = ["Dry Waste", "Wet Waste", "E-Waste"];
 
 async function init() {
-  const modelUrl = "https://teachablemachine.withgoogle.com/models/Ob5Nn-csT/";
+  const modelUrl = "YOUR-TEACHABLE-MACHINE-MODEL-https://teachablemachine.withgoogle.com/models/Ob5Nn-csT//model.json";
   model = await tf.loadLayersModel(modelUrl);
   console.log("Model loaded!");
 }
