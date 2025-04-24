@@ -1,0 +1,19 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+#result {
+  margin: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+#chatbot {
+  border: none;
+  margin-top: 20px;
+}
