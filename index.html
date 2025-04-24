@@ -1,38 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WasteBot</title>
+  <title>Waste Assistant</title>
   <style>
-    body { 
-      font-family: Arial; 
-      text-align: center; 
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    #chatbot { margin: 20px auto; }
-    #image-section { margin: 20px; }
+    body { font-family: Arial; text-align: center; padding: 20px; }
+    #chatbot-container, #image-section { margin: 20px auto; max-width: 400px; }
+    #result { padding: 10px; border: 1px solid #ddd; }
   </style>
 </head>
 <body>
   <h1>♻ Waste Assistant</h1>
-  
+
   <!-- Image Upload -->
   <div id="image-section">
     <h3>Upload Waste Image</h3>
     <input type="file" id="image-upload" accept="image/*">
-    <p id="result">Result will appear here</p>
+    <div id="result">Result will appear here</div>
   </div>
 
   <!-- Dialogflow Chat -->
-  <iframe id="chatbot"
-    allow="microphone;"
-    width="350"
-    height="500"
-    src="https://bot.dialogflow.com/d61fa5f8-ca32-4774-a65d-593e1e6cec91">
-  </iframe>
+  <div id="chatbot-container">
+    <h3>Chat About Waste</h3>
+    <iframe
+      allow="microphone;"
+      width="350"
+      height="500"
+      src="https://bot.dialogflow.com/d61fa5f8-ca32-4774-a65d-593e1e6cec91">
+    </iframe>
+  </div>
 
-  <!-- Add Teachable Machine Script -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
   <script src="script.js"></script>
 </body>
