@@ -4,15 +4,15 @@
   <title>WasteMBot Assistant</title>
   <style>
     :root {
-      --brand-green: #4CAF50;
-      --brand-blue: #2196F3;
-      --brand-red: #F44336;
+      --green: #4CAF50;
+      --blue: #2196F3;
+      --red: #F44336;
     }
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
-      background: #f9f9f9;
+      background: #f5f9fc;
       color: #333;
     }
     .header {
@@ -20,9 +20,9 @@
       margin-bottom: 30px;
     }
     .header h1 {
-      color: var(--brand-green);
-      font-size: 2.5em;
-      margin-bottom: 10px;
+      color: var(--green);
+      font-size: 2.2em;
+      margin-bottom: 5px;
     }
     .container {
       display: flex;
@@ -35,29 +35,32 @@
     .card {
       background: white;
       border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       padding: 25px;
       width: 350px;
     }
     .card h2 {
-      color: var(--brand-blue);
+      color: var(--blue);
       margin-top: 0;
       border-bottom: 2px solid #eee;
       padding-bottom: 10px;
+    }
+    .upload-area {
+      text-align: center;
+      margin: 20px 0;
     }
     #image-upload {
       display: none;
     }
     .upload-btn {
-      background: var(--brand-blue);
+      background: var(--blue);
       color: white;
-      padding: 12px 20px;
+      padding: 12px 25px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      font-size: 16px;
       font-weight: bold;
-      display: inline-block;
-      margin-bottom: 15px;
       transition: all 0.3s;
     }
     .upload-btn:hover {
@@ -66,16 +69,17 @@
     }
     #preview {
       max-width: 100%;
+      max-height: 250px;
       border-radius: 8px;
       display: none;
       margin: 15px auto;
-      border: 3px solid var(--brand-green);
+      border: 3px solid var(--green);
     }
     #result {
       padding: 15px;
-      background: #f5f5f5;
+      background: #f8f8f8;
       border-radius: 8px;
-      margin-top: 15px;
+      margin: 15px 0;
       min-height: 60px;
     }
     #chatbot {
@@ -83,7 +87,7 @@
       height: 500px;
       border: none;
       border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .loading {
       display: none;
@@ -92,27 +96,33 @@
     }
     .loader {
       border: 5px solid #f3f3f3;
-      border-top: 5px solid var(--brand-green);
+      border-top: 5px solid var(--green);
       border-radius: 50%;
-      width: 50px;
-      height: 50px;
+      width: 40px;
+      height: 40px;
       animation: spin 1s linear infinite;
-      margin: 0 auto;
+      margin: 0 auto 10px;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
     .waste-tip {
-      background: var(--brand-green);
+      background: var(--green);
       color: white;
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       margin-top: 15px;
     }
     .error {
-      color: var(--brand-red);
+      color: var(--red);
       font-weight: bold;
+    }
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
     }
   </style>
 </head>
@@ -126,8 +136,10 @@
     <!-- Image Detection Card -->
     <div class="card">
       <h2>Waste Image Detection</h2>
-      <label for="image-upload" class="upload-btn">Upload Waste Image</label>
-      <input type="file" id="image-upload" accept="image/*">
+      <div class="upload-area">
+        <label for="image-upload" class="upload-btn">📷 Upload Waste Image</label>
+        <input type="file" id="image-upload" accept="image/*">
+      </div>
       <img id="preview" alt="Image Preview">
       
       <div class="loading">
@@ -136,7 +148,7 @@
       </div>
       
       <div id="result">
-        <p>Results will appear here</p>
+        <p>Detection results will appear here</p>
       </div>
       
       <div id="tip" class="waste-tip" style="display:none;">
@@ -150,7 +162,7 @@
       <iframe
         id="chatbot"
         allow="microphone;"
-        src="https://bot.dialogflow.com/d61fa5f8-ca32-4774-a65d-593e1e6cec91">
+        src="https://console.dialogflow.com/api-client/demo/embedded/d61fa5f8-ca32-4774-a65d-593e1e6cec91">
       </iframe>
     </div>
   </div>
@@ -169,7 +181,7 @@
     const loadingDiv = document.querySelector(".loading");
     const tipDiv = document.getElementById("tip");
     
-    // Class names (update these to match your model)
+    // Class names (must match your Teachable Machine model)
     const classNames = ["Dry Waste", "Wet Waste", "E-Waste", "Hazardous"];
     
     // Load model when page starts
@@ -179,9 +191,12 @@
         model = await tf.loadLayersModel(modelUrl);
         console.log("Model loaded successfully!");
         loadingDiv.style.display = "none";
+        
+        // Enable upload after model loads
+        upload.disabled = false;
       } catch (error) {
         console.error("Error loading model:", error);
-        resultDiv.innerHTML = `<p class="error">Error loading waste detection model. Please refresh the page.</p>`;
+        resultDiv.innerHTML = `<p class="error">⚠️ Error loading waste detection. Please refresh the page.</p>`;
         loadingDiv.style.display = "none";
       }
     }
@@ -237,7 +252,7 @@
       } catch (error) {
         console.error("Detection error:", error);
         loadingDiv.style.display = "none";
-        resultDiv.innerHTML = `<p class="error">Error analyzing image. Please try another photo.</p>`;
+        resultDiv.innerHTML = `<p class="error">⚠️ Error analyzing image. Please try another photo.</p>`;
       }
     }
     
@@ -253,7 +268,10 @@
     }
     
     // Initialize when page loads
-    window.onload = init;
+    window.onload = function() {
+      init();
+      upload.disabled = true; // Disable until model loads
+    };
   </script>
 </body>
 </html>
