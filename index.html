@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WasteMBot Assistant</title>
   <style>
     :root {
@@ -13,7 +15,6 @@
       margin: 0;
       padding: 20px;
       background: #f5f9fc;
-      color: #333;
     }
     .header {
       text-align: center;
@@ -129,48 +130,51 @@
 <body>
   <div class="header">
     <h1>♻ WasteMBot Assistant</h1>
-    <p>Smart waste classification and recycling guidance</p>
+    <p>Upload waste images or chat with our assistant</p>
   </div>
 
   <div class="container">
     <!-- Image Detection Card -->
     <div class="card">
-      <h2>Waste Image Detection</h2>
+      <h2>Image Detection</h2>
       <div class="upload-area">
-        <label for="image-upload" class="upload-btn">📷 Upload Waste Image</label>
+        <label for="image-upload" class="upload-btn">📷 Upload Image</label>
         <input type="file" id="image-upload" accept="image/*">
       </div>
       <img id="preview" alt="Image Preview">
       
       <div class="loading">
         <div class="loader"></div>
-        <p>Analyzing waste...</p>
+        <p>Detecting waste type...</p>
       </div>
       
       <div id="result">
-        <p>Detection results will appear here</p>
+        <p>Results will appear here</p>
       </div>
       
       <div id="tip" class="waste-tip" style="display:none;">
-        💡 Proper disposal tip will appear here
+        💡 Disposal advice will appear here
       </div>
     </div>
 
     <!-- Chatbot Card -->
     <div class="card">
-      <h2>Waste Assistant Chat</h2>
-      <iframe
-        id="chatbot"
-        allow="microphone;"
-        src="https://console.dialogflow.com/api-client/demo/embedded/d61fa5f8-ca32-4774-a65d-593e1e6cec91">
-      </iframe>
+      <h2>Chat Assistant</h2>
+      <!-- Dialogflow Messenger -->
+      <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+      <df-messenger
+        intent="WELCOME"
+        chat-title="WasteMbot"
+        agent-id="d61fa5f8-ca32-4774-a65d-593e1e6cec91"
+        language-code="en"
+      ></df-messenger>
     </div>
   </div>
 
-  <!-- TensorFlow.js and custom script -->
+  <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
   <script>
-    // Load your Teachable Machine model
+    // Your Teachable Machine model
     const modelUrl = "https://teachablemachine.withgoogle.com/models/Ob5Nn-csT/model.json";
     let model;
     
@@ -181,38 +185,34 @@
     const loadingDiv = document.querySelector(".loading");
     const tipDiv = document.getElementById("tip");
     
-    // Class names (must match your Teachable Machine model)
+    // Class names (must match your model's classes exactly)
     const classNames = ["Dry Waste", "Wet Waste", "E-Waste", "Hazardous"];
     
-    // Load model when page starts
-    async function init() {
+    // Initialize the model
+    async function initModel() {
       try {
         loadingDiv.style.display = "block";
         model = await tf.loadLayersModel(modelUrl);
         console.log("Model loaded successfully!");
         loadingDiv.style.display = "none";
-        
-        // Enable upload after model loads
         upload.disabled = false;
       } catch (error) {
-        console.error("Error loading model:", error);
-        resultDiv.innerHTML = `<p class="error">⚠️ Error loading waste detection. Please refresh the page.</p>`;
+        console.error("Model loading failed:", error);
+        resultDiv.innerHTML = `<p class="error">⚠️ Error loading waste detector. Please refresh.</p>`;
         loadingDiv.style.display = "none";
       }
     }
     
-    // Handle image upload
+    // Handle image uploads
     upload.addEventListener("change", function(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        
         reader.onload = function(event) {
           preview.src = event.target.result;
           preview.style.display = "block";
           detectWaste(preview);
         }
-        
         reader.readAsDataURL(file);
       }
     });
@@ -220,29 +220,27 @@
     // Detect waste type
     async function detectWaste(imageElement) {
       try {
-        // Show loading animation
+        // Show loading state
         resultDiv.innerHTML = "";
         tipDiv.style.display = "none";
         loadingDiv.style.display = "block";
         
-        // Preprocess image
+        // Process image
         const tensor = tf.browser.fromPixels(imageElement)
-          .resizeNearestNeighbor([224, 224]) // Match model's expected input
+          .resizeNearestNeighbor([224, 224])
           .toFloat()
           .expandDims();
         
-        // Make prediction
+        // Predict
         const prediction = await model.predict(tensor).data();
+        const maxProb = Math.max(...prediction);
+        const predictedClass = classNames[prediction.indexOf(maxProb)];
         
-        // Get highest probability class
-        const maxProbability = Math.max(...prediction);
-        const predictedClass = classNames[prediction.indexOf(maxProbability)];
-        
-        // Hide loading, show results
+        // Show results
         loadingDiv.style.display = "none";
-        resultDiv.innerHTML = `
-          <p><strong>Detected:</strong> ${predictedClass}</p>
-          <p><strong>Confidence:</strong> ${Math.round(maxProbability * 100)}%</p>
+        resultDiv.innerHTML = `  
+          <p><strong>Type:</strong> ${predictedClass}</p>
+          <p><strong>Confidence:</strong> ${Math.round(maxProb * 100)}%</p>
         `;
         
         // Show disposal tip
@@ -250,26 +248,26 @@
         tipDiv.innerHTML = `💡 ${getWasteTip(predictedClass)}`;
         
       } catch (error) {
-        console.error("Detection error:", error);
+        console.error("Detection failed:", error);
         loadingDiv.style.display = "none";
-        resultDiv.innerHTML = `<p class="error">⚠️ Error analyzing image. Please try another photo.</p>`;
+        resultDiv.innerHTML = `<p class="error">⚠️ Failed to analyze image. Try another.</p>`;
       }
     }
     
     // Waste disposal tips
     function getWasteTip(wasteType) {
       const tips = {
-        "Dry Waste": "Rinse and recycle in the blue bin.",
-        "Wet Waste": "Compost in green bin or use for biogas.",
+        "Dry Waste": "Rinse and recycle in blue bins.",
+        "Wet Waste": "Compost in green bins or use for biogas.",
         "E-Waste": "Take to certified e-waste recycling centers.",
-        "Hazardous": "Handle with care. Dispose at hazardous waste facilities only."
+        "Hazardous": "Handle carefully. Dispose at hazardous waste facilities only."
       };
-      return tips[wasteType] || "Please check local disposal guidelines.";
+      return tips[wasteType] || "Check local disposal guidelines.";
     }
     
     // Initialize when page loads
     window.onload = function() {
-      init();
+      initModel();
       upload.disabled = true; // Disable until model loads
     };
   </script>
